@@ -5,10 +5,10 @@ import { Dialog } from "../components/Dialog";
 import { Button } from "../components/Button";
 
 export default function Home() {
-    const [image, setImage] = useState<File>();
+    const [, setImage] = useState<File>();
     const [isDragging, setIsDragging] = useState<boolean>();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [open, setOpen] = useState(false)
+    const [open] = useState(false)
 
     const handleDrop = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault();
