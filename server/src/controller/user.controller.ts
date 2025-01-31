@@ -43,6 +43,9 @@ const signup = asyncHandler(async (req: Request, res: Response) => {
     const isUserExist = await Users.findOne({ "profile_info.email": email });
 
     if (isUserExist) {
+        if (isUserExist.is_verified) {
+            return res.json({ message: "User already exists. Please verify your email." }).status(409);
+        }
         return res.json({ message: "User already exists. Please login instead!" }).status(409);
     }
 
@@ -68,9 +71,9 @@ const signup = asyncHandler(async (req: Request, res: Response) => {
     const user = await Users.findById(createUser._id).select("-refreshToken -verification_code -verification_code_expiry -profile_info.password");
 
     return res.json({
+        user: user,
         message: `we just sent a verification email to ${email}.`,
         success: true,
-        user
     }).status(201);
 
 });
@@ -112,16 +115,21 @@ const signin = asyncHandler(async (req: Request, res: Response) => {
             });
     }
 
-    throw new APIError(401, "Please verify your email first.");
+    return res.status(401)
+        .json({
+            user: isUserExist,
+            success: false,
+            message: "Email is not verified. Please verify your email to continue."
+        });
 
 });
 
 
 const verifyemail = asyncHandler(async (req: Request, res: Response) => {
-    const { code }: { code: number } = req.body;
+    const { otp } = req.body;
 
-    if (!code) {
-        throw new APIError(404, "code is required");
+    if (!otp) {
+        throw new APIError(404, "otp code is required");
     }
 
     if (!isValidObjectId(req.params.id)) {
@@ -134,8 +142,8 @@ const verifyemail = asyncHandler(async (req: Request, res: Response) => {
         throw new APIError(400, "Verification code has expired");
     }
 
-    if (isUserExisting.verification_code !== code) {
-        throw new APIError(400, "Invalid verification code");
+    if (String(isUserExisting.verification_code) !== String(otp)) {
+        throw new APIError(400, "Invalid OTP verification code.");
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(String(isUserExisting._id));
@@ -156,7 +164,7 @@ const verifyemail = asyncHandler(async (req: Request, res: Response) => {
         .cookie("refreshToken", refreshToken, option)
         .status(200)
         .json({
-            user,
+            user: user,
             success: true,
             message: "email verified successfully",
         });
@@ -212,18 +220,53 @@ const signout = asyncHandler(async (req: Request, res: Response) => {
 });
 
 
-const getUser = asyncHandler(async (req: Request, res: Response) => {
-    const image = req.file;
-    console.log(image);
-    return res.json({ image });
+const getProfile = asyncHandler(async (req: Request, res: Response) => {
+    return res.status(200).json({
+        success: true,
+        user: req.user,
+        message: "current user fetched successfully!.."
+    })
 });
+
+const updateAccountDetail = asyncHandler(async (req: Request, res: Response) => {
+    const { profile_info }: usertype = req.body;
+
+    if (!profile_info) {
+        return res.json({
+            message: "Details is required."
+        });
+    }
+
+    const user = await Users.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                ...profile_info
+            }
+        },
+        { new: true }
+    ).select("-password");
+
+    return res.status(200).json({
+        success: true,
+        message: "user details updated.",
+        user
+    })
+});
+
+const changePassword = asyncHandler(async (req: Request, res: Response) => { });
+
+const forgotPassword = asyncHandler(async (req: Request, res: Response) => { });
 
 
 export {
     signup,
     signin,
-    verifyemail,
-    ResendEmailVerificationCode,
     signout,
-    getUser
+    getProfile,
+    verifyemail,
+    forgotPassword,
+    changePassword,
+    updateAccountDetail,
+    ResendEmailVerificationCode,
 };

@@ -11,43 +11,41 @@ const s3Client = new S3Client({
 
 export async function uploadFile(file: Express.Multer.File) {
     try {
+        const key = file.originalname + "-" + Date.now();
+
         const command = new PutObjectCommand({
             Bucket: process.env.AWS_BUCKET_NAME!,
-            Key: file.filename,
+            Key: key,
             Body: file.buffer,
             ContentType: file.mimetype,
         });
 
         const data = await s3Client.send(command, { requestTimeout: 5000 });
 
-        if (data.$metadata.httpStatusCode === 200) {
-            return {
-                URL: `https://${process.env.AWS_BUCKET_NAME!}.s3.${process.env.AWS_BUCKET_REGION}.amazonaws.com/${name}`
-            };
+        if (data.$metadata.httpStatusCode !== 200) {
+            throw new Error("Error uploading file");
         }
 
-        throw new Error("Error uploading file");
+        return {
+            URL: `https://${process.env.AWS_BUCKET_NAME!}.s3.${process.env.AWS_BUCKET_REGION}.amazonaws.com/${key}`,
+        };
 
     } catch (error) {
-        console.error(`Error uploading file: ${error}`);
+        throw new Error(`Error Uploading file: ${error}`);
     }
 }
 
+
 export async function deleteFile(key: string) {
     try {
-        if (!key) {
-            throw new Error("Key is required");
-        }
-
         const result = await s3Client.send(new DeleteObjectCommand({
             Bucket: process.env.NEXT_PUBLIC_AWS_BUCKET_NAME!,
             Key: key
         }));
-        console.log(result);
 
         return result;
+
     } catch (err) {
-        console.error(`Error deleting file: ${err}`);
-        throw err;
+        throw new Error(`Error deleting file: ${err}`);
     }
 }

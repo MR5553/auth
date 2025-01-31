@@ -36,3 +36,8 @@ export interface ApiResponse {
     },
     success: boolean;
 }
+
+export interface signoutResponse {
+    message: string;
+    success: boolean;
+}

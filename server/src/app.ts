@@ -20,8 +20,10 @@ app.use(cookieParser());
 
 //routes
 import userRoute from "./routes/user.routes";
+import fileRoute from "./routes/file.routes";
 
 app.use("/api/auth", userRoute);
+app.use("/api/file", fileRoute);
 
 
 export { app };

@@ -22,7 +22,7 @@ transporter.verify((error) => {
 });
 
 
-export const EmailVerification = async (email: string, verificationCode: number) => {
+export const EmailVerification = async (email: string, otp: number) => {
     const info = await transporter.sendMail({
         from: "Techbyte",
         to: email,
@@ -39,7 +39,7 @@ export const EmailVerification = async (email: string, verificationCode: number)
 
         <p style="color: #555555;">
             Your verification code is: <strong style="letter-spacing: 2px; color: #000;">
-            ${verificationCode}</strong>
+            ${otp}</strong>
         </p>
 
         <p style="color: #555555;">

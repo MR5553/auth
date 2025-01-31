@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 
 export function useTheme() {
     const getPreferredTheme = () =>
@@ -21,7 +21,7 @@ export function useTheme() {
         localStorage.setItem("theme", newTheme);
     };
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         document.documentElement.className = theme;
         document.documentElement.style.colorScheme = theme;
     }, [theme]);

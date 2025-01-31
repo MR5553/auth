@@ -1,7 +1,7 @@
 import { Input } from "../components/Input";
 import { ChangeEvent, ClipboardEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
-export default function OtpBox({ length, onChange }: { length: number, onChange: (otp: number) => void }) {
+export default function OtpBox({ length, onChange }: { length: number, onChange: (value: number) => void }) {
     const [otp, setOtp] = useState(new Array(length).fill(""));
     const inputRef = useRef([] as HTMLInputElement[]);
 
@@ -10,7 +10,6 @@ export default function OtpBox({ length, onChange }: { length: number, onChange:
             inputRef.current[0].focus();
         }
     }, []);
-
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
         const { value } = e.target;
@@ -70,19 +69,19 @@ export default function OtpBox({ length, onChange }: { length: number, onChange:
     }
 
     return (
-        <div className="max-w-xs flex items-center gap-4">
+        <div className="w-full flex items-center justify-between">
             {otp.map((value, index) => (
                 <Input
                     type="text"
                     key={index}
                     value={value}
                     inputMode="numeric"
+                    autoComplete="off"
+                    onPaste={(e) => handlePaste(e, index)}
+                    onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => handleKeyDown(e, index)}
+                    className="size-10 text-center text-sm font-medium"
                     ref={(input) => { inputRef.current[index] = input! }}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange(e, index)}
-                    onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => handleKeyDown(e, index)}
-                    onPaste={(e) => handlePaste(e, index)}
-                    className="text-center text-sm font-medium"
-                    autoComplete="off"
                 />
             ))}
         </div>

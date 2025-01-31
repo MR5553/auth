@@ -1,48 +1,43 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { useTheme } from "./hook/useTheme";
+
+const SignIn = lazy(() => (import("./pages/auth/Sign-in")));
+const Signup = lazy(() => (import("./pages/auth/Sign-up")));
+const Verifyemail = lazy(() => (import("./pages/auth/Verifyemail")));
 import Loader from "./components/Loader";
 import Home from "./pages/Home";
-import { useTheme } from "./hook/useTheme";
-import AuthLayout from "./pages/AuthLayout";
-import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
-const SignIn = lazy(() => (import("./pages/Sign-in")));
-const Signup = lazy(() => (import("./pages/Sign-up")));
-const Verifyemail = lazy(() => (import("./pages/Verifyemail")));
+import { Router } from "./pages/auth/AuthLayout";
 
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <AuthLayout />,
+    element: <Router RouteType="PRIVATE" />,
     children: [
-      {
-        path: "/",
-        element: <Home />,
-      },
-      {
-        path: "/verifyemail/:id",
-        element: <Verifyemail />,
-      },
-      {
-        path: "/profile",
-        element: <Profile />,
-      },
+      { index: true, element: <Home /> },
+    ],
+  },
+  {
+    path: "/",
+    element: <Router RouteType="PUBLIC" />,
+    children: [
+      { path: "sign-up", element: <Signup /> },
+      { path: "sign-in", element: <SignIn /> },
+      { path: "forget-password", element: <SignIn /> },
+    ],
+  },
+  {
+    path: "verifyemail/:id",
+    element: <Router RouteType="VERIFYEMAIL" />,
+    children: [
+      { index: true, element: <Verifyemail /> },
     ]
   },
-  {
-    path: "/sign-up",
-    element: <Signup />,
-  },
-  {
-    path: "/sign-in",
-    element: <SignIn />,
-  },
-  {
-    path: "*",
-    element: <NotFound />,
-  },
+  { path: "*", element: <NotFound /> },
 ]);
+
 
 export default function App() {
   useTheme();

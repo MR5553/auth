@@ -1,50 +1,9 @@
 import { create } from "zustand";
-import { immer } from "zustand/middleware/immer"
-import { persist } from "zustand/middleware"
+import { immer } from "zustand/middleware/immer";
+import { persist } from "zustand/middleware";
+import { action, userState } from "../types/auth.type";
 import axios from "axios";
 import { ApiResponse } from "../types/axios.type";
-
-interface userState {
-    user: {
-        profile_info: {
-            name: string;
-            username: string;
-            email: string;
-            profile_img: string;
-            cover_img: string;
-            bio: string;
-        };
-        account_info: {
-            total_posts: number;
-            total_reads: number;
-            total_likes: number;
-        };
-        social_links: {
-            instagram: string;
-            youtube: string;
-            facebook: string;
-            twitter: string;
-            github: string;
-            website: string;
-        };
-        _id: string;
-        bookmarks: string[];
-        posts: string[];
-        createdAt: string;
-        updatedAt: string;
-        is_verified: boolean;
-    },
-    hydrated: boolean;
-    isAuthenticated: boolean;
-};
-
-interface action {
-    setHydrated: () => void;
-    SignIn: (email: string, password: string) => Promise<void>;
-    Signup: (name: string, email: string, password: string) => Promise<void>;
-    VerifyEmail: (code: number) => Promise<void>;
-    SignOut: () => void;
-};
 
 
 export const useAuthStore = create<userState & action>()(
@@ -55,7 +14,6 @@ export const useAuthStore = create<userState & action>()(
                     name: "",
                     username: "",
                     email: "",
-                    password: "",
                     profile_img: "",
                     cover_img: "",
                     bio: "",
@@ -83,71 +41,48 @@ export const useAuthStore = create<userState & action>()(
             hydrated: false,
             isAuthenticated: false,
 
-            SignIn: async (email: string, password: string) => {
-                try {
-                    const res = await axios.post<ApiResponse>("/api/auth/signin", { email, password });
-                    const { user, success } = res.data;
-
-                    if (success) {
-                        set({
-                            user: {
-                                ...user,
-                            },
-                            isAuthenticated: true,
-                            hydrated: true,
-                        });
-                    }
-
-                } catch (error) {
-                    console.error(error);
-                }
+            SignIn: (user) => {
+                set({
+                    user: {
+                        ...user
+                    },
+                    isAuthenticated: true
+                })
             },
-            Signup: async (name: string, email: string, password: string) => {
+            Signup: (user) => {
+                set({
+                    user: {
+                        ...user
+                    },
+                    isAuthenticated: false
+                })
+            },
+            VerifyEmail: (user) => {
+                set({
+                    user: {
+                        ...user
+                    },
+                    isAuthenticated: true
+                })
+            },
+            SignOut: async () => {
+                set({
+                    user: {} as userState["user"],
+                    isAuthenticated: false,
+                })
+            },
+            getProfile: async () => {
                 try {
-                    const res = await axios.post<ApiResponse>("/api/auth/signin", { name, email, password });
-
-                    const { user, success } = res.data;
+                    const { data: { success, user } } = await axios.get<ApiResponse>("/api/auth/current-user", { withCredentials: true });
 
                     if (success) {
                         set({
                             user: {
                                 ...user
                             },
-                            isAuthenticated: false
+                            isAuthenticated: true
                         })
                     }
-
-                } catch (error) {
-                    console.error(error);
-                }
-            },
-            VerifyEmail: async (code) => {
-                try {
-                    const res = await axios.post<ApiResponse>("/api/auth/verify-email", { code });
-                    const { user, success } = res.data;
-
-                    if (success && user.is_verified) {
-                        set({
-                            user: { ...user },
-                            isAuthenticated: true,
-                        });
-                    }
-
-                } catch (error) {
-                    console.error(error);
-                }
-            },
-            SignOut: async () => {
-                try {
-                    const res = await axios.post<{ status: number }>("/api/auth/signout");
-
-                    if (res.data.status === 200) {
-                        set({
-                            user: {} as userState["user"],
-                            isAuthenticated: false,
-                        })
-                    }
-
                 } catch (error) {
                     console.error(error);
                 }
@@ -164,7 +99,11 @@ export const useAuthStore = create<userState & action>()(
                         state?.setHydrated();
                     }
                 };
-            }
+            },
+            partialize: (state) => ({
+                user: state.user,
+                isAuthenticated: state.isAuthenticated,
+            }),
         }
     )
 );
