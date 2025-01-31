@@ -23,7 +23,7 @@ const auth = asyncHandler(async (req: Request, res: Response, next: NextFunction
 
         req.user = user;
 
-        next();
+        return next();
 
     } catch (error) {
         throw new APIError(500, "internal server error");
