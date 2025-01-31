@@ -15,7 +15,7 @@ const auth = asyncHandler(async (req: Request, res: Response, next: NextFunction
 
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!);
 
-        const user = await Users.findById((decoded as jwtToken)._id);
+        const user = await Users.findById((decoded as jwtToken)._id).select("-profile_info.password");
 
         if (!user) {
             return res.status(401).json({ message: "invalid token" });

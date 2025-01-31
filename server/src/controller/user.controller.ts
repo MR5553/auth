@@ -245,7 +245,7 @@ const updateAccountDetail = asyncHandler(async (req: Request, res: Response) => 
             }
         },
         { new: true }
-    ).select("-password");
+    ).select("-profile_info.password");
 
     return res.status(200).json({
         success: true,
