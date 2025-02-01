@@ -88,9 +88,9 @@ const signin = asyncHandler(async (req: Request, res: Response) => {
         return res.json({ message: "email, password is required" }).status(404);
     }
 
-    const user = await Users.findOne({
+    const user: usertype = await Users.findOne({
         $or: [{ "profile_info.username": username }, { "profile_info.email": email }]
-    }) as usertype;
+    }).select("profile_info.password");
 
     if (!user) {
         throw new APIError(404, "user not found, please signup instead.");
