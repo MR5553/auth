@@ -9,18 +9,7 @@
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "dist/index.js",
-            "methods": [
-                "GET",
-                "POST",
-                "PUT",
-                "PATCH",
-                "DELETE",
-                "OPTIONS"
-            ],
-            "headers": {
-                "Access-Control-Allow-Origin": "*"
-            }
+            "dest": "src/index.ts"
         }
     ]
 }
