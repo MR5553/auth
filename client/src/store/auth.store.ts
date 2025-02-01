@@ -73,7 +73,7 @@ export const useAuthStore = create<userState & action>()(
             },
             getProfile: async () => {
                 try {
-                    const { data: { success, user } } = await axios.get<ApiResponse>("/api/auth/current-user", { withCredentials: true });
+                    const { data: { success, user } } = await axios.get<ApiResponse>(`{import.meta.env.VITE_API_URL}/auth/current-user`, { withCredentials: true });
 
                     if (success) {
                         set({

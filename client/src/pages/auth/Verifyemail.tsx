@@ -15,7 +15,7 @@ export default function Verifyemail() {
 
     const handleResendVerificationCode = async () => {
         try {
-            const { data } = await axios.post(`/api/auth/resend-verification-code/${param.id}`);
+            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/auth/resend-verification-code/${param.id}`);
             console.log(data);
         } catch (error) {
             console.log(error);
@@ -26,7 +26,7 @@ export default function Verifyemail() {
         e.preventDefault();
         try {
             setIsSubmitting(true);
-            const { data: { user, success } } = await axios.post<ApiResponse>(`/api/auth/verifyemail/${param.id}`, { otp: otp });
+            const { data: { user, success } } = await axios.post<ApiResponse>(`${import.meta.env.VITE_API_URL}/auth/verifyemail/${param.id}`, { otp: otp });
 
             if (success) {
                 VerifyEmail(user);

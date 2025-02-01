@@ -22,7 +22,7 @@ export default function SignIn() {
 
     const submit = async ({ email, password }: { email: string, password: string }) => {
         try {
-            const { data: { user, success } } = await axios.post<ApiResponse>("https://techbyte-v1a6.vercel.app/api/auth/sign-in", { email, password });
+            const { data: { user, success } } = await axios.post<ApiResponse>(`${import.meta.env.VITE_API_URL}/auth/sign-in`, { email, password });
 
             if (success) {
                 SignIn(user);

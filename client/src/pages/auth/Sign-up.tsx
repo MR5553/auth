@@ -21,7 +21,7 @@ export default function SignUp() {
 
     const submit = async ({ name, email, password }: { name: string, email: string, password: string }) => {
         try {
-            const { data: { user, success } } = await axios.post<ApiResponse>("/api/auth/sign-up", { name, email, password });
+            const { data: { user, success } } = await axios.post<ApiResponse>(`${import.meta.env.VITE_API_URL}/auth/sign-up`, { name, email, password });
 
             if (success) {
                 Signup(user);
