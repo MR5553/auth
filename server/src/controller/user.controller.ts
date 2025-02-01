@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, CookieOptions } from "express";
 import { usertype } from "../types/users.type";
 import { Users } from "../model/user.model";
 import crypto from "crypto";
@@ -27,9 +27,11 @@ const generateAccessAndRefreshToken = async (userId: string) => {
 };
 
 
-const option = {
+const option: CookieOptions = {
     httpOnly: true,
     secure: true,
+    sameSite: "none",
+    maxAge: 259200000
 };
 
 
@@ -86,30 +88,30 @@ const signin = asyncHandler(async (req: Request, res: Response) => {
         return res.json({ message: "email, password is required" }).status(404);
     }
 
-    const isUserExist = await Users.findOne({
+    const user = await Users.findOne({
         $or: [{ "profile_info.username": username }, { "profile_info.email": email }]
     }) as usertype;
 
-    if (!isUserExist) {
+    if (!user) {
         throw new APIError(404, "user not found, please signup instead.");
     }
 
-    if (isUserExist.is_verified) {
-        const isPasswordvalid = await isUserExist.IsPasswordCorrect(password);
+    if (user.is_verified) {
+        const isPasswordvalid = await user?.IsPasswordCorrect(password);
 
         if (!isPasswordvalid) {
             throw new APIError(404, "password is incorrect, please try again.");
         }
 
-        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(String(isUserExist._id));
+        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(String(user._id));
 
-        const user = await Users.findById(isUserExist._id).select("-refreshToken -verification_code -verification_code_expiry -profile_info.password");
+        const ExistingUser = await Users.findById(user._id).select("-refreshToken -verification_code -verification_code_expiry -profile_info.password");
 
         return res.cookie("accessToken", accessToken, option)
             .cookie("refreshToken", refreshToken, option)
             .status(200)
             .json({
-                user,
+                user: ExistingUser,
                 success: true,
                 message: "user logged in successfully",
             });
@@ -117,7 +119,7 @@ const signin = asyncHandler(async (req: Request, res: Response) => {
 
     return res.status(401)
         .json({
-            user: isUserExist,
+            user: user,
             success: false,
             message: "Email is not verified. Please verify your email to continue."
         });
@@ -136,29 +138,23 @@ const verifyemail = asyncHandler(async (req: Request, res: Response) => {
         throw new APIError(400, "invalid user id.");
     }
 
-    const isUserExisting = await Users.findById(req.params.id) as usertype;
+    const user: usertype = await Users.findById(req.params.id).select("profile_info.password");
 
-    if (!isUserExisting.verification_code_expiry || new Date(isUserExisting.verification_code_expiry) <= new Date()) {
+    if (!user.verification_code_expiry || new Date(user.verification_code_expiry) <= new Date()) {
         throw new APIError(400, "Verification code has expired");
     }
 
-    if (String(isUserExisting.verification_code) !== String(otp)) {
+    if (String(user.verification_code) !== String(otp)) {
         throw new APIError(400, "Invalid OTP verification code.");
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(String(isUserExisting._id));
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(String(user._id));
 
-    isUserExisting.is_verified = true;
-    isUserExisting.refreshToken = refreshToken;
-    isUserExisting.verification_code = undefined;
-    isUserExisting.verification_code_expiry = undefined;
-    await isUserExisting.save();
-
-    const user = isUserExisting.toObject();
-    delete user.refreshToken;
-    delete user.verification_code;
-    delete user.verification_code_expiry;
-    delete user.profile_info.password;
+    user.is_verified = true;
+    user.refreshToken = refreshToken;
+    user.verification_code = undefined;
+    user.verification_code_expiry = undefined;
+    await user.save();
 
     return res.cookie("accessToken", accessToken, option)
         .cookie("refreshToken", refreshToken, option)
@@ -250,7 +246,7 @@ const updateAccountDetail = asyncHandler(async (req: Request, res: Response) => 
     return res.status(200).json({
         success: true,
         message: "user details updated.",
-        user
+        user: user
     })
 });
 
