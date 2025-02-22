@@ -1,3 +1,4 @@
+import { Button } from "../components/Button";
 import { useTheme } from "../hook/useTheme"
 
 export default function Home() {
@@ -5,7 +6,7 @@ export default function Home() {
 
     return (
         <div>
-            <button onClick={toggleTheme}>{theme}</button>
+            <Button variant="defualt" size="sm" onClick={toggleTheme}>{theme}</Button>
         </div>
     )
 }

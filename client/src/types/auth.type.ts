@@ -27,7 +27,7 @@ export interface userState {
         createdAt: string;
         updatedAt: string;
         is_verified: boolean;
-    },
+    };
     hydrated: boolean;
     isAuthenticated: boolean;
 };
@@ -36,7 +36,6 @@ export interface action {
     setHydrated: () => void;
     SignIn: (user: userState["user"]) => void;
     Signup: (user: userState["user"]) => void;
-    VerifyEmail: (user: userState["user"]) => void;
     getProfile: () => Promise<void>;
     SignOut: () => void;
 };

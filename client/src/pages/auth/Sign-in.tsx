@@ -4,7 +4,7 @@ import { signInSchema } from "../../lib/user.schema";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/auth.store";
 import axios from "axios";
 import { ApiResponse } from "../../types/axios.type";
@@ -12,7 +12,8 @@ import { ApiResponse } from "../../types/axios.type";
 
 export default function SignIn() {
     const [visible, setVisible] = useState<boolean>(false);
-    const { SignIn } = useAuthStore((state) => state);
+    const { SignIn, Signup } = useAuthStore((state) => state);
+    const navigate = useNavigate();
 
     const { register, handleSubmit, formState: { errors, isValid, isDirty, isSubmitting } } = useForm({
         resolver: yupResolver(signInSchema),
@@ -22,10 +23,17 @@ export default function SignIn() {
 
     const submit = async ({ email, password }: { email: string, password: string }) => {
         try {
-            const { data: { user, success } } = await axios.post<ApiResponse>(`${import.meta.env.VITE_API_URL}/auth/sign-in`, { email, password });
+            const { data: { user, success } } = await axios.post<ApiResponse>(`${import.meta.env.VITE_API_URL}/api/auth/sign-in`, { email, password });
+
+
+            if (user && !user.is_verified) {
+                Signup(user);
+                return navigate(`/verifyemail/${user._id}`);
+            }
 
             if (success) {
                 SignIn(user);
+                navigate("/");
             }
 
         } catch (error) {
@@ -34,7 +42,7 @@ export default function SignIn() {
     };
 
     return (
-        <section className="flex flex-col gap-4 items-center justify-center h-dvh select-none">
+        <section className="flex flex-col gap-4 items-center justify-center h-dvh">
             <form onSubmit={handleSubmit(submit)} className="w-[20rem] grid gap-5">
                 <div>
                     <h1 className="text-3xl font-medium text-primary dark:text-white tracking-wider">

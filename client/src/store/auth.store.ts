@@ -54,15 +54,6 @@ export const useAuthStore = create<userState & action>()(
                     user: {
                         ...user
                     },
-                    isAuthenticated: false
-                })
-            },
-            VerifyEmail: (user) => {
-                set({
-                    user: {
-                        ...user
-                    },
-                    isAuthenticated: true
                 })
             },
             SignOut: async () => {
@@ -73,7 +64,7 @@ export const useAuthStore = create<userState & action>()(
             },
             getProfile: async () => {
                 try {
-                    const { data: { success, user } } = await axios.get<ApiResponse>(`{import.meta.env.VITE_API_URL}/auth/current-user`, { withCredentials: true });
+                    const { data: { success, user } } = await axios.get<ApiResponse>(`${import.meta.env.VITE_API_URL}/api/auth/current-user`, { withCredentials: true });
 
                     if (success) {
                         set({

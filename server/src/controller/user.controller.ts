@@ -26,7 +26,6 @@ const generateAccessAndRefreshToken = async (userId: string) => {
     }
 };
 
-
 const option: CookieOptions = {
     httpOnly: true,
     secure: true,
@@ -85,45 +84,45 @@ const signin = asyncHandler(async (req: Request, res: Response) => {
     const { email, password, username }: usertype["profile_info"] = await req.body;
 
     if ((!email && !username) || !password) {
-        return res.json({ message: "email, password is required" }).status(404);
+        return res.status(404).json({ message: "email, password is required" });
     }
 
-    const user: usertype = await Users.findOne({
+    const user = await Users.findOne({
         $or: [{ "profile_info.username": username }, { "profile_info.email": email }]
-    }).select("profile_info.password");
+    }) as usertype;
+
 
     if (!user) {
         throw new APIError(404, "user not found, please signup instead.");
     }
 
-    if (user.is_verified) {
-        const isPasswordvalid = await user?.IsPasswordCorrect(password);
-
-        if (!isPasswordvalid) {
-            throw new APIError(404, "password is incorrect, please try again.");
-        }
-
-        const { accessToken, refreshToken } = await generateAccessAndRefreshToken(String(user._id));
-
-        const ExistingUser = await Users.findById(user._id).select("-refreshToken -verification_code -verification_code_expiry -profile_info.password");
-
-        return res.cookie("accessToken", accessToken, option)
-            .cookie("refreshToken", refreshToken, option)
-            .status(200)
+    if (!user.is_verified) {
+        const unVerifiendUser = await Users.findById(user._id).select("-refreshToken -verification_code -verification_code_expiry -profile_info.password");
+        return res.status(200)
             .json({
-                user: ExistingUser,
-                success: true,
-                message: "user logged in successfully",
+                user: unVerifiendUser,
+                message: "Email is not verified. Please verify your email to continue."
             });
     }
 
-    return res.status(401)
-        .json({
-            user: user,
-            success: false,
-            message: "Email is not verified. Please verify your email to continue."
-        });
+    const isPasswordvalid = await user?.IsPasswordCorrect(password);
 
+    if (!isPasswordvalid) {
+        throw new APIError(404, "password is incorrect, please try again.");
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(String(user._id));
+
+    const ExistingUser = await Users.findById(user._id).select("-refreshToken -verification_code -verification_code_expiry -profile_info.password");
+
+    return res.cookie("accessToken", accessToken, option)
+        .cookie("refreshToken", refreshToken, option)
+        .status(200)
+        .json({
+            user: ExistingUser,
+            success: true,
+            message: "user logged in successfully",
+        });
 });
 
 
@@ -138,7 +137,7 @@ const verifyemail = asyncHandler(async (req: Request, res: Response) => {
         throw new APIError(400, "invalid user id.");
     }
 
-    const user: usertype = await Users.findById(req.params.id).select("profile_info.password");
+    const user: usertype = await Users.findById(req.params.id).select("-profile_info.password");
 
     if (!user.verification_code_expiry || new Date(user.verification_code_expiry) <= new Date()) {
         throw new APIError(400, "Verification code has expired");

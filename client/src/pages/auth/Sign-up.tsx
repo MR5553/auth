@@ -21,7 +21,7 @@ export default function SignUp() {
 
     const submit = async ({ name, email, password }: { name: string, email: string, password: string }) => {
         try {
-            const { data: { user, success } } = await axios.post<ApiResponse>(`${import.meta.env.VITE_API_URL}/auth/sign-up`, { name, email, password });
+            const { data: { user, success } } = await axios.post<ApiResponse>(`${import.meta.env.VITE_API_URL}/api/auth/sign-up`, { name, email, password });
 
             if (success) {
                 Signup(user);
@@ -34,8 +34,8 @@ export default function SignUp() {
     }
 
     return (
-        <section onSubmit={handleSubmit(submit)} className="flex flex-col gap-4 items-center justify-center h-dvh select-none">
-            <form className="w-[20rem] grid gap-5">
+        <section className="flex flex-col gap-4 items-center justify-center h-dvh">
+            <form onSubmit={handleSubmit(submit)} className="w-[20rem] grid gap-5">
                 <div>
                     <h1 className="text-3xl font-medium text-primary dark:text-white tracking-wider">
                         Join us today

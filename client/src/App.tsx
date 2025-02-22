@@ -26,18 +26,11 @@ const router = createBrowserRouter([
       { path: "sign-up", element: <Signup /> },
       { path: "sign-in", element: <SignIn /> },
       { path: "forget-password", element: <SignIn /> },
+      { path: "verifyemail/:id", element: <Verifyemail /> },
     ],
-  },
-  {
-    path: "verifyemail/:id",
-    element: <Router RouteType="VERIFYEMAIL" />,
-    children: [
-      { index: true, element: <Verifyemail /> },
-    ]
   },
   { path: "*", element: <NotFound /> },
 ]);
-
 
 export default function App() {
   useTheme();

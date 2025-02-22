@@ -5,13 +5,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ApiResponse } from "../../types/axios.type";
 import { FormEvent, useState } from "react";
 import { useAuthStore } from "../../store/auth.store";
+import { useTimer } from "../../hook/Timer";
 
 export default function Verifyemail() {
     const [otp, setOpt] = useState<number>(0);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-    const { VerifyEmail } = useAuthStore((state) => state);
+    const { SignIn } = useAuthStore((state) => state);
     const param = useParams();
     const navigate = useNavigate();
+    const { time, startTimer, isRunning } = useTimer(60);
 
     const handleResendVerificationCode = async () => {
         try {
@@ -26,10 +28,10 @@ export default function Verifyemail() {
         e.preventDefault();
         try {
             setIsSubmitting(true);
-            const { data: { user, success } } = await axios.post<ApiResponse>(`${import.meta.env.VITE_API_URL}/auth/verifyemail/${param.id}`, { otp: otp });
+            const { data: { user, success } } = await axios.post<ApiResponse>(`${import.meta.env.VITE_API_URL}/api/auth/verifyemail/${param.id}`, { otp: otp });
 
             if (success) {
-                VerifyEmail(user);
+                SignIn(user);
                 navigate("/");
                 setIsSubmitting(false);
             }
@@ -64,16 +66,21 @@ export default function Verifyemail() {
                     size="default"
                     disabled={(otp <= 100000 || otp >= 999999) || isNaN(otp) || isSubmitting}
                 >
-                    Verify OTP
+                    Continue
                 </Button>
             </form>
 
-            <p className="mt-5 text-neutral-600 dark:text-neutral-400 font-normal">Didn't receive the code?
+            <p className="mt-5 text-neutral-600 dark:text-neutral-400 font-normal">Didn't get the code?
                 <Button
                     variant="link"
                     className="ml-2"
-                    onClick={handleResendVerificationCode}                >
-                    Resend
+                    onClick={() => {
+                        handleResendVerificationCode()
+                        startTimer()
+                    }}
+                    disabled={isRunning}
+                >
+                    {isRunning ? time : "Resend it."}
                 </Button>
             </p>
         </section>
