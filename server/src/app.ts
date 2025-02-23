@@ -12,7 +12,7 @@ app.use(express.static("public"));
 app.use(cors({
     origin: process.env.CLIENT_ORIGIN,
     credentials: true,
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"]
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
 }));
 app.use(morgan("dev"));
 app.use(cookieParser());

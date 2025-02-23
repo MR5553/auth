@@ -4,7 +4,6 @@ import { Users } from "../model/user.model";
 import crypto from "crypto";
 import { EmailVerification } from "../mail/nodemailer";
 import { asyncHandler } from "../utils/asyncHandler";
-import { APIError } from "../utils/APIError";
 import { isValidObjectId } from "mongoose";
 
 
@@ -22,7 +21,7 @@ const generateAccessAndRefreshToken = async (userId: string) => {
         return { accessToken, refreshToken }
 
     } catch (error) {
-        throw new APIError(500, "something went wrong while generating refresh and access token");
+        throw error("Something went wrong while generating refresh and access token")
     }
 };
 
@@ -93,7 +92,7 @@ const signin = asyncHandler(async (req: Request, res: Response) => {
 
 
     if (!user) {
-        throw new APIError(404, "user not found, please signup instead.");
+        return res.status(404).json({ message: "user not found, please signup instead." })
     }
 
     if (!user.is_verified) {
@@ -108,7 +107,7 @@ const signin = asyncHandler(async (req: Request, res: Response) => {
     const isPasswordvalid = await user?.IsPasswordCorrect(password);
 
     if (!isPasswordvalid) {
-        throw new APIError(404, "password is incorrect, please try again.");
+        return res.status(400).json({ message: "password is incorrect, please try again." })
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(String(user._id));
@@ -129,22 +128,18 @@ const signin = asyncHandler(async (req: Request, res: Response) => {
 const verifyemail = asyncHandler(async (req: Request, res: Response) => {
     const { otp } = req.body;
 
-    if (!otp) {
-        throw new APIError(404, "otp code is required");
-    }
+    if (!otp) return res.status(400).json({ message: "otp code is required" });
 
-    if (!isValidObjectId(req.params.id)) {
-        throw new APIError(400, "invalid user id.");
-    }
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: "invalid user id" });
 
     const user: usertype = await Users.findById(req.params.id).select("-profile_info.password");
 
     if (!user.verification_code_expiry || new Date(user.verification_code_expiry) <= new Date()) {
-        throw new APIError(400, "Verification code has expired");
+        return res.status(400).json({ message: "Verification code has expired" })
     }
 
     if (String(user.verification_code) !== String(otp)) {
-        throw new APIError(400, "Invalid OTP verification code.");
+        return res.status(400).json({ message: "Invalid OTP verification code." })
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(String(user._id));
@@ -168,13 +163,9 @@ const verifyemail = asyncHandler(async (req: Request, res: Response) => {
 
 
 const ResendEmailVerificationCode = asyncHandler(async (req: Request, res: Response) => {
-    if (!req.params.id) {
-        throw new APIError(404, "user id is missing.");
-    }
+    if (!req.params.id) return res.status(404).json({ message: "User id is missing." })
 
-    if (!isValidObjectId(req.params.id)) {
-        throw new APIError(404, "invalid user id.");
-    }
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: "invalid user id" });
 
     const VerificationCode = crypto.randomInt(100000, 999999);
 
