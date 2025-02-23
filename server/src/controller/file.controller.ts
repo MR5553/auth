@@ -22,7 +22,6 @@ const uploadImage = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const { URL } = await uploadFile(image);
-    console.log(URL);
 
     return res.status(200).json({
         success: true,
